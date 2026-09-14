@@ -202,6 +202,58 @@ export const useScheduleStore = defineStore('schedule', () => {
     cellCache.value = new Map()
   }
 
+  // --- reference entity CRUD ------------------------------------------
+
+  const ENTITY_PATHS = {
+    buildings: '/api/buildings',
+    rooms: '/api/rooms',
+    teachers: '/api/teachers',
+    groups: '/api/groups',
+    subjects: '/api/subjects',
+    timeSlots: '/api/time-slots',
+    loads: '/api/loads',
+  }
+
+  function extractErrorMessage(e, fallback) {
+    const detail = e.response?.data?.detail
+    if (typeof detail === 'string') return detail
+    if (detail?.errors) return detail.errors.join('; ')
+    return fallback
+  }
+
+  async function createEntity(entity, data) {
+    try {
+      await axios.post(ENTITY_PATHS[entity], data)
+      error.value = ''
+      await load()
+    } catch (e) {
+      error.value = extractErrorMessage(e, 'Не удалось создать запись')
+      throw e
+    }
+  }
+
+  async function updateEntity(entity, id, data) {
+    try {
+      await axios.put(`${ENTITY_PATHS[entity]}/${id}`, data)
+      error.value = ''
+      await load()
+    } catch (e) {
+      error.value = extractErrorMessage(e, 'Не удалось сохранить изменения')
+      throw e
+    }
+  }
+
+  async function deleteEntity(entity, id) {
+    try {
+      await axios.delete(`${ENTITY_PATHS[entity]}/${id}`)
+      error.value = ''
+      await load()
+    } catch (e) {
+      error.value = extractErrorMessage(e, 'Не удалось удалить запись')
+      throw e
+    }
+  }
+
   return {
     buildings,
     rooms,
@@ -236,5 +288,8 @@ export const useScheduleStore = defineStore('schedule', () => {
     unassign,
     startDrag,
     endDrag,
+    createEntity,
+    updateEntity,
+    deleteEntity,
   }
 })

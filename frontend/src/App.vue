@@ -4,9 +4,11 @@ import { useScheduleStore } from './stores/schedule'
 import LoadPool from './components/LoadPool.vue'
 import ScheduleGrid from './components/ScheduleGrid.vue'
 import RoomPickerModal from './components/RoomPickerModal.vue'
+import ReferencesView from './views/ReferencesView.vue'
 
 const store = useScheduleStore()
 const modalRequest = ref(null) // { loadId, itemId, day, slotId } | null
+const page = ref('schedule') // 'schedule' | 'references'
 
 onMounted(() => {
   store.load().catch(() => {})
@@ -26,41 +28,62 @@ function closeModal() {
       <h1 class="font-semibold text-gray-900 text-sm shrink-0">Расписание</h1>
       <div class="flex gap-1 bg-gray-100 rounded-md p-0.5">
         <button
-          v-for="mode in [
-            { value: 'group', label: 'По группам' },
-            { value: 'room', label: 'По аудиториям' },
-            { value: 'teacher', label: 'По преподавателям' },
+          v-for="p in [
+            { value: 'schedule', label: 'Расписание' },
+            { value: 'references', label: 'Справочники' },
           ]"
-          :key="mode.value"
+          :key="p.value"
           class="px-3 py-1 text-sm rounded transition-colors"
           :class="
-            store.viewMode === mode.value
+            page === p.value
               ? 'bg-white shadow-sm text-gray-900 font-medium'
               : 'text-gray-500 hover:text-gray-800'
           "
-          @click="store.setViewMode(mode.value)"
+          @click="page = p.value"
         >
-          {{ mode.label }}
+          {{ p.label }}
         </button>
       </div>
-      <select
-        v-model="store.selectedId"
-        class="border border-gray-300 rounded-md text-sm px-2 py-1"
-      >
-        <option v-for="opt in store.entityOptions" :key="opt.id" :value="opt.id">
-          {{ opt.label }}
-        </option>
-      </select>
+      <template v-if="page === 'schedule'">
+        <div class="flex gap-1 bg-gray-100 rounded-md p-0.5">
+          <button
+            v-for="mode in [
+              { value: 'group', label: 'По группам' },
+              { value: 'room', label: 'По аудиториям' },
+              { value: 'teacher', label: 'По преподавателям' },
+            ]"
+            :key="mode.value"
+            class="px-3 py-1 text-sm rounded transition-colors"
+            :class="
+              store.viewMode === mode.value
+                ? 'bg-white shadow-sm text-gray-900 font-medium'
+                : 'text-gray-500 hover:text-gray-800'
+            "
+            @click="store.setViewMode(mode.value)"
+          >
+            {{ mode.label }}
+          </button>
+        </div>
+        <select
+          v-model="store.selectedId"
+          class="border border-gray-300 rounded-md text-sm px-2 py-1"
+        >
+          <option v-for="opt in store.entityOptions" :key="opt.id" :value="opt.id">
+            {{ opt.label }}
+          </option>
+        </select>
+      </template>
     </header>
 
     <div v-if="store.error" class="bg-red-50 text-red-700 text-sm px-3 py-2 border-b border-red-200">
       {{ store.error }}
     </div>
 
-    <div class="flex flex-1 min-h-0">
+    <div v-if="page === 'schedule'" class="flex flex-1 min-h-0">
       <LoadPool />
       <ScheduleGrid @drop-request="onDropRequest" />
     </div>
+    <ReferencesView v-else />
 
     <RoomPickerModal :request="modalRequest" @close="closeModal" />
   </div>
