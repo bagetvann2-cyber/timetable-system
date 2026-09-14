@@ -9,10 +9,7 @@ GET /api/initial-data (in main.py) after any mutation, same as assign/unassign.
 """
 from __future__ import annotations
 
-from typing import Literal
-
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,54 +26,9 @@ from database.models import (
     TimeSlot,
     get_session,
 )
+from schemas import BuildingIn, GroupIn, LoadIn, RoomIn, SubjectIn, TeacherIn, TimeSlotIn
 
 router = APIRouter()
-
-
-# ---------------------------------------------------------------------------
-# Schemas
-# ---------------------------------------------------------------------------
-
-
-class BuildingIn(BaseModel):
-    name: str
-
-
-class RoomIn(BaseModel):
-    building_id: int
-    number: str
-    capacity: int
-    is_lab: bool = False
-    floor: int
-
-
-class TeacherIn(BaseModel):
-    full_name: str
-    department: str
-
-
-class GroupIn(BaseModel):
-    code: str
-    students_count: int
-    course: int
-
-
-class SubjectIn(BaseModel):
-    name: str
-
-
-class TimeSlotIn(BaseModel):
-    slot_number: int
-    start_time: str
-    end_time: str
-
-
-class LoadIn(BaseModel):
-    subject_id: int
-    teacher_id: int
-    lesson_type: Literal["lecture", "practice", "lab"]
-    total_hours_per_week: int
-    group_ids: list[int] = []
 
 
 # ---------------------------------------------------------------------------

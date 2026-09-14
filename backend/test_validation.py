@@ -19,7 +19,7 @@ from database.models import (
     Teacher,
     TimeSlot,
 )
-from main import find_conflicts, get_load_or_404
+from validation import find_conflicts, get_load_or_404
 
 
 async def make_session():
