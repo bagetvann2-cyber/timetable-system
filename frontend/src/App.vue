@@ -9,6 +9,7 @@ import ReferencesView from './views/ReferencesView.vue'
 const store = useScheduleStore()
 const modalRequest = ref(null) // { loadId, itemId, day, slotId } | null
 const page = ref('schedule') // 'schedule' | 'references'
+const generating = ref(false)
 
 onMounted(() => {
   store.load().catch(() => {})
@@ -19,6 +20,18 @@ function onDropRequest(request) {
 }
 function closeModal() {
   modalRequest.value = null
+}
+
+async function onAutoGenerate() {
+  if (!confirm('Стереть текущую расстановку и составить расписание заново?')) return
+  generating.value = true
+  try {
+    await store.autoGenerate()
+  } catch {
+    // store.error already set
+  } finally {
+    generating.value = false
+  }
 }
 </script>
 
@@ -72,11 +85,21 @@ function closeModal() {
             {{ opt.label }}
           </option>
         </select>
+        <button
+          class="ml-auto px-3 py-1.5 text-sm rounded-md bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50 shrink-0"
+          :disabled="generating"
+          @click="onAutoGenerate"
+        >
+          {{ generating ? 'Составляю…' : 'Составить автоматически' }}
+        </button>
       </template>
     </header>
 
     <div v-if="store.error" class="bg-red-50 text-red-700 text-sm px-3 py-2 border-b border-red-200">
       {{ store.error }}
+    </div>
+    <div v-else-if="store.info" class="bg-blue-50 text-blue-700 text-sm px-3 py-2 border-b border-blue-200">
+      {{ store.info }}
     </div>
 
     <div v-if="page === 'schedule'" class="flex flex-1 min-h-0">

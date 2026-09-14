@@ -35,6 +35,7 @@ export const useScheduleStore = defineStore('schedule', () => {
 
   const loading = ref(false)
   const error = ref('')
+  const info = ref('') // non-error status banner, e.g. auto-generate results
 
   // --- lookups -------------------------------------------------------
 
@@ -175,6 +176,7 @@ export const useScheduleStore = defineStore('schedule', () => {
         current_item_id: itemId,
       })
       error.value = ''
+      info.value = ''
       await load()
     } catch (e) {
       const detail = e.response?.data?.detail
@@ -187,9 +189,25 @@ export const useScheduleStore = defineStore('schedule', () => {
     try {
       await axios.delete(`/api/schedule/unassign/${itemId}`)
       error.value = ''
+      info.value = ''
       await load()
     } catch (e) {
       error.value = 'Не удалось убрать пару'
+      throw e
+    }
+  }
+
+  async function autoGenerate() {
+    try {
+      const { data } = await axios.post('/api/schedule/auto-generate')
+      error.value = ''
+      info.value =
+        data.unplaced === 0
+          ? `Расставлено ${data.placed} из ${data.placed} часов — всё поместилось.`
+          : `Расставлено ${data.placed} часов, ${data.unplaced} осталось в пуле (не хватило подходящих аудиторий).`
+      await load()
+    } catch (e) {
+      error.value = 'Не удалось составить расписание автоматически'
       throw e
     }
   }
@@ -225,6 +243,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     try {
       await axios.post(ENTITY_PATHS[entity], data)
       error.value = ''
+      info.value = ''
       await load()
     } catch (e) {
       error.value = extractErrorMessage(e, 'Не удалось создать запись')
@@ -236,6 +255,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     try {
       await axios.put(`${ENTITY_PATHS[entity]}/${id}`, data)
       error.value = ''
+      info.value = ''
       await load()
     } catch (e) {
       error.value = extractErrorMessage(e, 'Не удалось сохранить изменения')
@@ -247,6 +267,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     try {
       await axios.delete(`${ENTITY_PATHS[entity]}/${id}`)
       error.value = ''
+      info.value = ''
       await load()
     } catch (e) {
       error.value = extractErrorMessage(e, 'Не удалось удалить запись')
@@ -269,6 +290,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     cellCache,
     loading,
     error,
+    info,
     entityOptions,
     poolLoads,
     loadById,
@@ -288,6 +310,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     unassign,
     startDrag,
     endDrag,
+    autoGenerate,
     createEntity,
     updateEntity,
     deleteEntity,
