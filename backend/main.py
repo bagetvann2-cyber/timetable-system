@@ -28,6 +28,7 @@ from database.models import (
     init_db,
 )
 from references import router as references_router
+from scheduler import auto_generate
 
 
 @asynccontextmanager
@@ -422,3 +423,9 @@ async def unassign_schedule(
         raise HTTPException(404, "Пара не найдена")
     await session.delete(item)
     await session.commit()
+
+
+@app.post("/api/schedule/auto-generate")
+async def auto_generate_schedule(session: AsyncSession = Depends(get_session)):
+    """Wipe the schedule and rebuild it greedily. See scheduler.py."""
+    return await auto_generate(session)
