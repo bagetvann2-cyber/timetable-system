@@ -24,9 +24,10 @@ from database.models import (
     Subject,
     Teacher,
     TimeSlot,
-    async_session,
+    get_session,
     init_db,
 )
+from references import router as references_router
 
 
 @asynccontextmanager
@@ -45,10 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-async def get_session():
-    async with async_session() as session:
-        yield session
+app.include_router(references_router)
 
 
 # ---------------------------------------------------------------------------
